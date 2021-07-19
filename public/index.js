@@ -1,7 +1,9 @@
+
 let transactions = [];
 let myChart;
 
-fetch("/api/transaction")
+const fetchTransactions = () => {
+  fetch("/api/transaction")
   .then(response => {
     return response.json();
   })
@@ -13,6 +15,37 @@ fetch("/api/transaction")
     populateTable();
     populateChart();
   });
+
+  return transactions
+}
+
+transactions = fetchTransactions();
+
+var db = new Dexie("offlineDB");
+db.version(1).stores({
+    transactions: 'name,value,date'
+});
+
+const saveRecord = (transaction) => {
+    db.transactions.put({name: transaction.name, value: transaction.value, date: transaction.date}).then (function(){
+    // Then when data is stored, read from it
+    return db.transactions.get(transaction.name);
+  }).then(function (data) {
+      // Display the result
+      alert (`Stored new transaction: Name=${transaction.name}, Value=${transaction.value}`);
+  }).catch(function(error) {
+    alert ("Ooops: " + error);
+  });
+}
+
+const checkLocal = async () => {
+  const allRecords = await db.transactions.toArray()
+  return allRecords
+}
+
+const updateServer = () => {
+  sendBulk(transactions.toArray)
+}
 
 function populateTotal() {
   // reduce transaction amounts to a single total value
@@ -151,3 +184,31 @@ document.querySelector("#add-btn").onclick = function() {
 document.querySelector("#sub-btn").onclick = function() {
   sendTransaction(false);
 };
+
+const sendBulk = (transactionsArr) => {
+  fetch("/api/transaction/bulk", {
+    method: "POST",
+    body: JSON.stringify(transactionsArr),
+    headers: {
+      Accept: "application/json, text/plain, */*",
+      "Content-Type": "application/json"
+    }
+  })
+  .then(response => {    
+    return response.json();
+  })
+  .then(() => {
+    db.transactions.clear()
+  })
+  .catch(err => {
+    console.log(err)
+  })
+}
+
+if(navigator.onLine){
+  transactionsArr = checkLocal()
+  if(transactionsArr.length > 0){
+    updateServer(transactionsArr)
+    transactions = fetchTransactions();
+  }
+}
