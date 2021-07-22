@@ -21,6 +21,9 @@ const saveRecord = async (transaction) => {
     await db.transactions.put({name: transaction.name, value: transaction.value, date: transaction.date}).then (function(){
     // Then when data is stored, read from it
     return db.transactions.get(transaction.name);
+  }).then(function (data) {
+      // Display the result
+      alert (`Stored new transaction: Name=${transaction.name}, Value=${transaction.value}`);
   }).catch(function(error) {
     alert ("Ooops: " + error);
   });
@@ -192,12 +195,18 @@ const fetchTransactions = async () => {
     const res = await updateServer(transactionsArr)
   }
 
-  data = await fetch("api/transaction")
-  transactions = await data.json();
+  fetch("/api/transaction")
+  .then(response => {
+    return response.json();
+  })
+  .then(data => {
+    // save db data on global variable
+    transactions = data;
 
-  populateTotal();
-  populateTable();
-  populateChart();
+    populateTotal();
+    populateTable();
+    populateChart();
+  });
 
   return transactions
 }
