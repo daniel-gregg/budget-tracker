@@ -195,7 +195,14 @@ const fetchTransactions = async () => {
     const res = await updateServer(transactionsArr)
   }
 
-  fetch("/api/transaction")
+  const data = await fetch("/api/transaction")
+  transactions = await data.json()
+
+  populateTotal();
+  populateTable();
+  populateChart();
+  
+  /* fetch("/api/transaction")
   .then(response => {
     return response.json();
   })
@@ -207,7 +214,7 @@ const fetchTransactions = async () => {
     populateTable();
     populateChart();
   });
-
+ */
   return transactions
 }
 
