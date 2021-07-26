@@ -110,7 +110,7 @@ const sendTransaction = async (isAdding) => {
   // create record
   let transaction = {
     name: nameEl.value,
-    value: amountEl.value,
+    value: +amountEl.value,
     date: new Date().toISOString()
   };
 
